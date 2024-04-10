@@ -44,16 +44,18 @@ server = app.server
 # App layout
 app.layout = html.Div([
     html.Div([
-        dcc.Dropdown(options=['All']+selections, value=list(selections[:1]), clearable=True, id='role-dropdown', multi=True, placeholder='All'),
+        dcc.Dropdown(options=['All']+selections, value=list(selections[:1]), clearable=True, id='role-dropdown', multi=True, placeholder='All')],
+        style={'width': '100%', 'marginBottom': 0}),
+    html.Div([
         dcc.Graph(id='spectrum')],
-        style={'width': '100%', 'display': 'inline-block'}),
+        style={'width': '100%', 'marginTop': 0}),
     html.Div([
         dcc.Graph(id='company-inflows-bar')],
         style={'width': '49%', 'display': 'inline-block'}),
     html.Div([
         dcc.Graph(id='school-inflows-bar')],
         style={'width': '49%', 'float': 'right', 'display': 'inline-block'})
-    ])
+    ], style={'marginTop': 0, 'marginBottom': 0, 'padding': 0})
 
 # Add controls to build the interaction
 @callback(
@@ -88,14 +90,13 @@ def update_graph(roles_chosen):
     ))
 
     spectrum.add_shape(type="line",
-                       x0=percentile, y0=-0.7,
-                       x1=percentile, y1=0.7,
+                       x0=percentile, y0=-0.55,
+                       x1=percentile, y1=0.55,
                        line=dict(color="Gray", width=5)
                        )
     
-    spectrum.add_annotation(x=percentile, y=0.8,
-                    text=f" {formatted_percentile}",
-                    #    hovertext=f"Salary growth score is <b>{formatted_percentile}</b>" ,
+    spectrum.add_annotation(x=percentile, y=0.56,
+                    text=f"{formatted_percentile}",
                     font_size=16,
                     showarrow=False,
                     yshift=10)
@@ -109,18 +110,24 @@ def update_graph(roles_chosen):
         yaxis=dict(title=None),
         
         title=dict(
-            text=format_title(
-                f'Average prestige: '+('Overall' if all_roles else 'selected roles')),
+            text=format_title('Average prestige'),
             yanchor="top",
-            y=0.72,
+            y=0.95,
             xanchor="left",
-            x=0.02,
+            x=0,
         ),
         plot_bgcolor="rgba(0,0,0,0)",
         hoverlabel = dict(
             bgcolor="white",
             bordercolor = "#2D426A",
             font = dict(size=12, family='Roboto Mono', color="#2D426A")
+        ),
+    margin = dict(
+        l = 0,  # default: 80
+        r = 0,  # default: 80
+        b = 0,  # default: 80
+        t = 0, # default: 100
+        pad = 0  # default: 0
         )
     )
     if all_roles:
