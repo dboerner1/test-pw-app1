@@ -37,6 +37,19 @@ def format_title(title, subtitle=None,font_size=25, subtitle_font_size=15):
     subtitle = f'<span style="font-size: {subtitle_font_size}px;font-family:Roboto;color:#899499">{subtitle}</span>'
     return f'{title}<br><br>{subtitle}'
 
+# for percentiles
+def ordinal(x: str):
+    if int(x) in range(11,20) or int(x) in [10*i for i in range(11)]:
+        return x+('th' if x!='0' else '')
+    elif x[-1] == '1':
+        return x+'st'
+    elif x[-1] == '2':
+        return x+'nd'
+    elif x[-1] == '3':
+        return x+'rd'
+    elif int(x[-1]) in range(4,10):
+        return x+'th' 
+    
 # Initialize the app
 app = Dash(__name__)
 server = app.server
@@ -47,7 +60,7 @@ app.layout = html.Div([
         dcc.Dropdown(options=['All']+selections, value=list(selections[:1]), clearable=True, id='role-dropdown', multi=True, placeholder='All')],
         style={'width': '100%', 'marginBottom': 0}),
     html.Div([
-        dcc.Graph(id='spectrum')],
+        dcc.Graph(id='spectrum'), html.Div("*selected roles")],
         style={'width': '100%', 'marginTop': 0}),
     html.Div([
         dcc.Graph(id='company-inflows-bar')],
@@ -78,7 +91,13 @@ def update_graph(roles_chosen):
     tmp['tmp_col'] = np.abs(tmp['PRESTIGE']-raw_prestige)
     percentile = int(round(tmp[tmp['tmp_col']==(tmp['tmp_col'].min())]['PERCENTILE'].values[0]*100,0))
 
-    formatted_percentile = '{:.0f}%'.format(percentile)
+    formatted_percentile = '{:.0f}'.format(percentile)
+    ord_percentile = ordinal(str(percentile))
+    co = 'Asana'
+
+    customdata = [str(i)+'<extra></extra>' for i in range(101) if i!=percentile]
+    customdata.insert(percentile, f'The average {co} employee (in the selected position(s)) is in the {ord_percentile} percentile of prestige.<extra></extra>')
+
     spectrum = go.Figure(go.Heatmap(
         z=[list(range(101))],
         x=list(range(101)),
@@ -86,7 +105,10 @@ def update_graph(roles_chosen):
         colorscale='Spectral',
         opacity=0.8,
         showscale=False,
-        hoverinfo='skip'
+        customdata=[customdata],
+        hovertemplate="%{customdata}",
+        #hoverinfo='skip'
+        #hovertemplate=f'The average {co} employee (in the selected position(s)) is in the {ord_percentile} percentile of prestige.<extra></extra>'
     ))
 
     spectrum.add_shape(type="line",
@@ -94,6 +116,8 @@ def update_graph(roles_chosen):
                        x1=percentile, y1=0.55,
                        line=dict(color="Gray", width=5)
                        )
+
+    #spectrum.add_trace(go.Scatter(mode="lines", y=[-0.55, 0.55], x=[percentile,percentile]))
     
     spectrum.add_annotation(x=percentile, y=0.56,
                     text=f"{formatted_percentile}",
@@ -110,7 +134,7 @@ def update_graph(roles_chosen):
         yaxis=dict(title=None),
         
         title=dict(
-            text=format_title('Average prestige'),
+            text=format_title('Average prestige*'),
             yanchor="top",
             y=0.95,
             xanchor="left",
@@ -140,6 +164,7 @@ def update_graph(roles_chosen):
     trace = go.Bar(y = transitions_data['SOURCE_COMPANY']+' ',
                    x = transitions_data['N'],
                    marker_color = [crs[9]]*(len(transitions_data)-1)+[crs[0]],
+                   hovertemplate = '<b>%{y}</b>has had <b>%{x}</b> such employees leave for Asana.<extra></extra>',
                    orientation='h')
     companies.add_trace(trace)
     companies.update_layout(
@@ -151,7 +176,7 @@ def update_graph(roles_chosen):
                    showgrid = False, gridcolor='#EAECF0', gridwidth=1, tickformat='.f', showticklabels = False, 
                    tickfont=dict(family="Roboto", size=16, color="#2D426A")),
         showlegend=False,
-        title = dict(text = format_title('Top source companies'), yanchor='top', y=0.92, xanchor='left', x=0.02),
+        title = dict(text = format_title('Most common source companies*'), yanchor='top', y=0.85, xanchor='left', x=0.02),
         plot_bgcolor = 'rgba(0,0,0,0)',
         hoverlabel=dict(
             bgcolor='white',
@@ -171,6 +196,7 @@ def update_graph(roles_chosen):
     trace = go.Bar(y=education_data['parent_school_name'].apply(lambda x: x.title().replace(' Of', ' of').replace(' And', ' and'))+' ',
                    x=education_data['education_id'],
                    marker_color = [crs[9]]*(len(education_data)-1)+[crs[0]],
+                   hovertemplate = '<b>%{x}</b> such employees graduated from <b>%{y}</b>.<extra></extra>',
                    orientation='h')
     schools.add_trace(trace)
     schools.update_layout(
@@ -182,14 +208,13 @@ def update_graph(roles_chosen):
                    showgrid = False, gridcolor='#EAECF0', gridwidth=1, tickformat='.f', showticklabels = False, 
                    tickfont=dict(family="Roboto", size=16, color="#2D426A")),
         showlegend=False,
-        title = dict(text = format_title('Top alma maters'), yanchor='top', y=0.92, xanchor='left', x=0.02),
+        title = dict(text = format_title('Top alma maters*'), yanchor='top', y=0.85, xanchor='left', x=0.02),
         plot_bgcolor = 'rgba(0,0,0,0)',
         hoverlabel=dict(
             bgcolor='white',
             bordercolor = "#2D426A",
             font = dict(size=12, family="Roboto Mono", color='#2D426A'))
     )
-
     return spectrum, companies, schools
 
 
