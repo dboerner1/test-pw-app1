@@ -60,13 +60,13 @@ app.layout = html.Div([
         dcc.Dropdown(options=['All']+selections, value=list(selections[:1]), clearable=True, id='role-dropdown', multi=True, placeholder='All')],
         style={'width': '100%', 'marginBottom': 0}),
     html.Div([
-        dcc.Graph(id='spectrum'), html.Div("*selected roles")],
+        dcc.Graph(id='spectrum', config={'displayModeBar': False}), html.Div("*selected roles")],
         style={'width': '100%', 'marginTop': 0}),
     html.Div([
-        dcc.Graph(id='company-inflows-bar')],
+        dcc.Graph(id='company-inflows-bar', config={'displayModeBar': False})],
         style={'width': '49%', 'display': 'inline-block'}),
     html.Div([
-        dcc.Graph(id='school-inflows-bar')],
+        dcc.Graph(id='school-inflows-bar', config={'displayModeBar': False})],
         style={'width': '49%', 'float': 'right', 'display': 'inline-block'})
     ], style={'marginTop': 0, 'marginBottom': 0, 'padding': 0})
 
